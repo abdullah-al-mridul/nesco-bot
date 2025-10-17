@@ -6,10 +6,26 @@ const apiClient = axios.create({
   //   headers: { "X-Custom-Header": "foobar" },
 });
 
+let tokenForSendRequest = "";
+let tokenForSplit;
+
 const fetchHomePageData = async () => {
   try {
     const response = await apiClient.get("/pre/panel");
-    console.log(response.headers["set-cookie"][1]);
+    tokenForSplit = response.headers["set-cookie"][1].split("=");
+    for (let i = 1; i < tokenForSplit.length; i++) {
+      tokenForSendRequest += tokenForSplit[i];
+    }
+
+    console.log(tokenForSendRequest);
+    console.log(tokenForSplit);
+
+    const response2 = await apiClient.post("/pre/panel", {
+      headers: {
+        Cookie: tokenForSendRequest,
+      },
+    });
+    console.log(response2.data);
   } catch (error) {
     console.error(error);
   }
