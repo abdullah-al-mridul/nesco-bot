@@ -3,8 +3,22 @@ import { parseDocument } from "htmlparser2";
 import { DomUtils } from "htmlparser2";
 import TelegramBot from "node-telegram-bot-api";
 import dotenv from "dotenv";
+import express from "express";
 
 dotenv.config();
+
+const app = express();
+let currentCredit;
+app.get("/", (_, res) => {
+  res.status(200).send(
+    // `NESCO Bot is running\nCurrent Credit: ${currentCredit} BDT\nDeveloped and maintained by Abdullah Al Mridul`
+    `<h1>NESCO bot is running</h1><b>Current Credit: ${currentCredit} BDT</b><p>Developed and maintained by Abdullah Al Mridul</p>`
+  );
+});
+
+app.listen(3000, () => {
+  console.log("Server is running on port 3000");
+});
 
 const apiClient = axios.create({
   baseURL: "https://customer.nesco.gov.bd",
@@ -82,13 +96,13 @@ const fetchHomePageData = async () => {
             },
           }
         );
-
+        currentCredit = null;
         const creditValue = getInputValueByLabelIndex(
           responseForCredit.data,
           15,
           form_index
         );
-
+        currentCredit = creditValue;
         handleMeterValue(creditValue);
       } catch (error) {
         console.log(error.message);
@@ -138,4 +152,4 @@ setInterval(() => {
   fetchHomePageData();
 }, interval);
 
-console.log(apiClient.defaults.baseURL); // print the base URL to verify
+console.log("Target URL:", apiClient.defaults.baseURL); // print the base URL to verify
