@@ -139,7 +139,16 @@ function getInputValueByLabelIndex(html, labelIndex, formIndex) {
 function handleMeterValue(meterValue) {
   console.log("Processed Meter Value:", meterValue);
 
-  const today = new Date().toLocaleString();
+  const today = new Date().toLocaleString("bn-BD", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    second: "numeric",
+    hour12: true,
+    timeZone: "Asia/Dhaka",
+  });
   const output = `Meter Credit : ${meterValue} BDT\nDate : ${today}`;
 
   bot
