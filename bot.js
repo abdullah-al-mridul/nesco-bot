@@ -8,6 +8,9 @@ const apiClient = axios.create({
   //   headers: { "X-Custom-Header": "foobar" },
 });
 
+const cust_no = "40014418";
+const form_index = 1;
+
 let tokenForSendRequest = "";
 let tokenForSplit;
 
@@ -39,11 +42,31 @@ const fetchHomePageData = async () => {
       const csrfToken = metas[0].attribs.content;
       console.log("CSRF Token:", csrfToken);
 
-      const response2 = await apiClient.post("/pre/panel", {
-        headers: {
-          Cookie: tokenForSendRequest,
-        },
-      });
+      try {
+        const responseForCredit = await apiClient.post(
+          "/pre/panel",
+          {
+            _token: csrfToken,
+            cust_no,
+            submit: "রিচার্জ হিস্ট্রি",
+          },
+          {
+            headers: {
+              Cookie: "customer_service_portal_session=" + tokenForSendRequest,
+            },
+          }
+        );
+
+        const creditValue = getInputValueByLabelIndex(
+          responseForCredit.data,
+          15,
+          form_index
+        );
+
+        handleMeterValue(creditValue);
+      } catch (error) {
+        console.log(error.message);
+      }
     } else {
       console.log("No CSRF token found");
     }
@@ -53,5 +76,30 @@ const fetchHomePageData = async () => {
 };
 
 fetchHomePageData();
+
+function getInputValueByLabelIndex(html, labelIndex, formIndex) {
+  const doc = parseDocument(html);
+
+  const labels = DomUtils.findAll((el) => el.name === "label", doc.children);
+
+  if (labelIndex < 0 || labelIndex >= labels.length) return null;
+
+  const label = labels[labelIndex];
+  const parentDiv = DomUtils.getParent(label);
+  if (!parentDiv) return null;
+
+  const input = DomUtils.findAll(
+    (el) => el.name === "input" && el.attribs?.class?.includes("form-control"),
+    parentDiv.children
+  );
+
+  //   console.log(input);
+
+  return input[formIndex]?.attribs?.value?.trim() || null;
+}
+
+function handleMeterValue(meterValue) {
+  console.log("Processed Meter Value:", meterValue);
+}
 
 console.log(apiClient.defaults.baseURL); // print the base URL to verify
