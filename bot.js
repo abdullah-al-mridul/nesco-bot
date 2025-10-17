@@ -2,6 +2,9 @@ import axios from "axios";
 import { parseDocument } from "htmlparser2";
 import { DomUtils } from "htmlparser2";
 import TelegramBot from "node-telegram-bot-api";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const apiClient = axios.create({
   baseURL: "https://customer.nesco.gov.bd",
@@ -9,12 +12,25 @@ const apiClient = axios.create({
   //   headers: { "X-Custom-Header": "foobar" },
 });
 
-const cust_no = "40014418";
-const form_index = 1;
-const bot_token = "8484585856:AAERhjFKB7ugmMFTf_p4NSRkFpQ-d2nws2I";
-const chat_id = "7509119403";
+if (
+  !process.env.cust_no ||
+  !process.env.form_index ||
+  !process.env.bot_token ||
+  !process.env.chat_id ||
+  !process.env.interval
+) {
+  console.error(
+    "Please set all required environment variables in the .env file."
+  );
+  process.exit(1);
+}
+
+const cust_no = process.env.cust_no;
+const form_index = parseInt(process.env.form_index);
+const bot_token = process.env.bot_token;
+const chat_id = process.env.chat_id;
 // const interval = 3600000;
-const interval = 10000;
+const interval = parseInt(process.env.interval);
 
 const bot = new TelegramBot(bot_token, { polling: false });
 
@@ -108,8 +124,12 @@ function getInputValueByLabelIndex(html, labelIndex, formIndex) {
 
 function handleMeterValue(meterValue) {
   console.log("Processed Meter Value:", meterValue);
+
+  const today = new Date().toLocaleString();
+  const output = `Meter Credit : ${meterValue} BDT\nDate : ${today}`;
+
   bot
-    .sendMessage(chat_id, `Meter Credit : ${meterValue + " BDT"}`)
+    .sendMessage(chat_id, output)
     .then(() => console.log("Message sent to Telegram"))
     .catch((err) => console.error("Telegram error:", err));
 }
