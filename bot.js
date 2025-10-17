@@ -1,6 +1,7 @@
 import axios from "axios";
 import { parseDocument } from "htmlparser2";
 import { DomUtils } from "htmlparser2";
+import TelegramBot from "node-telegram-bot-api";
 
 const apiClient = axios.create({
   baseURL: "https://customer.nesco.gov.bd",
@@ -10,19 +11,28 @@ const apiClient = axios.create({
 
 const cust_no = "40014418";
 const form_index = 1;
+const bot_token = "8484585856:AAERhjFKB7ugmMFTf_p4NSRkFpQ-d2nws2I";
+const chat_id = "7509119403";
+// const interval = 3600000;
+const interval = 10000;
+
+const bot = new TelegramBot(bot_token, { polling: false });
 
 let tokenForSendRequest = "";
 let tokenForSplit;
 
 const fetchHomePageData = async () => {
   try {
+    tokenForSendRequest = "";
+    tokenForSplit = [];
+
     const response = await apiClient.get("/pre/panel");
     tokenForSplit = response.headers["set-cookie"][1].split("=");
     for (let i = 1; i < tokenForSplit.length; i++) {
       tokenForSendRequest += tokenForSplit[i];
     }
 
-    console.log("main token ..............  " + tokenForSendRequest);
+    // console.log("main token ..............  " + tokenForSendRequest);
 
     // console.log(tokenForSplit);
 
@@ -40,7 +50,7 @@ const fetchHomePageData = async () => {
 
     if (metas.length > 0) {
       const csrfToken = metas[0].attribs.content;
-      console.log("CSRF Token:", csrfToken);
+      //   console.log("CSRF Token:", csrfToken);
 
       try {
         const responseForCredit = await apiClient.post(
@@ -75,8 +85,6 @@ const fetchHomePageData = async () => {
   }
 };
 
-fetchHomePageData();
-
 function getInputValueByLabelIndex(html, labelIndex, formIndex) {
   const doc = parseDocument(html);
 
@@ -100,6 +108,14 @@ function getInputValueByLabelIndex(html, labelIndex, formIndex) {
 
 function handleMeterValue(meterValue) {
   console.log("Processed Meter Value:", meterValue);
+  bot
+    .sendMessage(chat_id, `Meter Credit : ${meterValue + " BDT"}`)
+    .then(() => console.log("Message sent to Telegram"))
+    .catch((err) => console.error("Telegram error:", err));
 }
+
+setInterval(() => {
+  fetchHomePageData();
+}, interval);
 
 console.log(apiClient.defaults.baseURL); // print the base URL to verify
